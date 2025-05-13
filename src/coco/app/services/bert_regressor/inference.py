@@ -1,0 +1,30 @@
+import torch
+from transformers import BertTokenizer
+
+from coco.app.services.bert_regressor.model import BERTForQuantification
+
+class InferenceHandler():
+    def __init__(self, model_weights_path):
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = self.load_model(model_weights_path)
+
+    def load_model(self, model_weights_path):
+        model = BERTForQuantification()
+        model.load_state_dict(torch.load(model_weights_path, map_location=self.device))
+        model.to(self.device)
+        model.eval()
+        return model
+    
+    def tokenize_input(self, text, tokenizer, max_len=128):
+        tokens = tokenizer(text, padding='max_length', max_length=max_len, truncation=True, return_tensors="pt")
+        return tokens['input_ids'], tokens['attention_mask']
+
+    def inference(self, text, class_type, tokenizer, device):
+        input_ids, attention_mask = self.tokenize_input(text, tokenizer)
+        input_ids = input_ids.to(device)
+        attention_mask = attention_mask.to(device)
+
+        with torch.no_grad():
+            score = self.model(input_ids, attention_mask, class_type)
+        return score.item() * 100
