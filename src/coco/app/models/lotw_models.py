@@ -1,7 +1,18 @@
 from pydantic import BaseModel
+from typing import List, Dict
 
-class ClotwOutput(BaseModel):
-    cLoTw: float
+from coco.app.models.data_models import TrustFunction
+
+class LabeledText(BaseModel):
+    label: TrustFunction
+    text: str
+
+class DataInput(BaseModel):
+    data: List[LabeledText]
+
+class StatusOutput(BaseModel):
+    calculating: bool
+    data_count: int
 
 class NlotwOutput(BaseModel):
-    nLoTw: float
+    nLoTw: Dict[str, float]
