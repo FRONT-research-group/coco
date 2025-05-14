@@ -1,30 +1,21 @@
 from fastapi import APIRouter, HTTPException
-from coco.app.models.lotw_models import ClotwOutput, NlotwOutput
-
-from coco.app.services import service as clotw_service
+from coco.app.models.lotw_models import NlotwOutput
+from coco.app.core import state
+from coco.app.services.lotw_service import LoTWService
 
 router = APIRouter(prefix="/lotw", tags=["LoTw"])
+service = LoTWService()
 
 @router.post("/calculate")
 def calculate_lotw():
     try:
-        clotw, _ = clotw_service.compute_clotw_scores()
-        return {"message": "cLoTw calculated successfully", "cLoTw": clotw}
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-@router.get("/clotw", response_model=ClotwOutput)
-def get_clotw():
-    try:
-        clotw = clotw_service.get_clotw()
-        return ClotwOutput(cLoTw=clotw)
+        nlotw = service.compute_clotw_scores()
+        return {"message": "cLoTw calculated successfully", "nLoTw": nlotw}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 @router.get("/nlotw", response_model=NlotwOutput)
 def get_nlotw():
-    try:
-        nlotw = clotw_service.get_nlotw()
-        return NlotwOutput(nLoTw=nlotw)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    if state.nlotw_score is None:
+        raise HTTPException(status_code=404, detail="nLoTw not yet calculated")
+    return NlotwOutput(nLoTw=state.nlotw_score)

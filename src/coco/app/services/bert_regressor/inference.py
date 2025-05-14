@@ -20,10 +20,10 @@ class InferenceHandler():
         tokens = tokenizer(text, padding='max_length', max_length=max_len, truncation=True, return_tensors="pt")
         return tokens['input_ids'], tokens['attention_mask']
 
-    def inference(self, text, class_type, tokenizer, device):
-        input_ids, attention_mask = self.tokenize_input(text, tokenizer)
-        input_ids = input_ids.to(device)
-        attention_mask = attention_mask.to(device)
+    def inference(self, text, class_type):
+        input_ids, attention_mask = self.tokenize_input(text, self.tokenizer)
+        input_ids = input_ids.to(self.device)
+        attention_mask = attention_mask.to(self.device)
 
         with torch.no_grad():
             score = self.model(input_ids, attention_mask, class_type)

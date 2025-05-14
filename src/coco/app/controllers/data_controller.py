@@ -1,16 +1,15 @@
 from fastapi import APIRouter
-from coco.app.models.data_models import DataInput, StatusOutput
-
-from coco.app.services import service as clotw_service
+from coco.app.models.lotw_models import DataInput, StatusOutput
+from coco.app.core import state
 
 router = APIRouter(prefix="/data", tags=["Data"])
 
 @router.post("/submit")
 def submit_data(data: DataInput):
-    count = clotw_service.submit_data(data.text)
-    return {"message": "Data received successfully", "count": count}
+    state.stored_data.extend(data.data)
+    state.calculating = True
+    return {"message": "Data received successfully", "count": len(state.stored_data)}
 
 @router.get("/status", response_model=StatusOutput)
 def get_status():
-    calculating, count = clotw_service.get_status()
-    return StatusOutput(calculating=calculating, data_count=count)
+    return StatusOutput(calculating=state.calculating, data_count=len(state.stored_data))
