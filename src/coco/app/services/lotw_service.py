@@ -7,9 +7,11 @@ from coco.app.core.logger import get_logger
 from coco.app.core import state
 from coco.app.models.lotw_models import LabeledText
 from coco.app.services.bert_regressor.inference import InferenceHandler
+from coco.app.services.calibrator import Calibrator
 
 logger = get_logger(__name__)
 _inference_handler = InferenceHandler(os.getenv("MODEL_PATH", "/models/bert_model.pth"))
+_calibrator = Calibrator()
 
 class LoTWService:
     def predict_score(self, text: str, class_type: int) -> float:
@@ -62,6 +64,36 @@ class LoTWService:
 
         logger.info(f"nLoTw result: {nlotw}")
         return nlotw
+    
+    def calculate_clotw(self, data: List[LabeledText]) -> Dict[str, float]:
+        logger.info(f"Calculating nLoTw for {len(data)} items...")
+        grouped_data = defaultdict(list)
+        
+        # Group texts by their labels
+        for item in data:
+            grouped_data[item.label].append(item.text)
+
+        logger.info(f"Grouped data by label: {[ (label, len(texts)) for label, texts in grouped_data.items() ]}")
+
+        scores_per_label = {
+            label: [self.predict_score(text, label) for text in texts]
+            for label, texts in grouped_data.items()
+        }
+        
+        cscores_per_label = _calibrator.calibrate(scores_per_label)
+
+        # Compute and normalize W_TF
+        wtf = self.compute_wtf(scores_per_label)
+        
+        # Compute final nLoTW using normalized W_TF * average(REG_TFj)
+        clotw = {label: wtf[label] * calibrated_score for label, calibrated_score in cscores_per_label}
+        logger.info(f"cLoTw result: {clotw}")
+        # Normalize final cLoTw values to ensure sum(cLoTw) == 1
+        total_clotw = sum(clotw.values())
+        if total_clotw > 0:
+            clotw = {label: 100 * score / total_clotw for label, score in clotw.items()}  # Normalize final scores
+        
+        return clotw
 
     def compute_wtf(self, scores_per_label: Dict[str, List[float]]) -> Dict[str, float]:
         """
@@ -94,8 +126,6 @@ class LoTWService:
             raise ValueError("No data available")
 
         nlotw = self.calculate_nlotw(state.stored_data)
+        clotw = self.calculate_clotw(state.stored_data)
 
-        state.nlotw_score = nlotw
-        state.calculating = False
-
-        return nlotw
+        return nlotw, clotw
