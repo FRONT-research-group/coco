@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from coco.app.models.lotw_models import NlotwOutput
 from coco.app.core import state
 from coco.app.services.lotw_service import LoTWService
+from coco.app.services.kafka_producer import publish_trust_scores
 
 router = APIRouter(prefix="/lotw", tags=["LoTw"])
 service = LoTWService()
@@ -10,7 +11,8 @@ service = LoTWService()
 def calculate_lotw():
     try:
         nlotw = service.compute_clotw_scores()
-        return {"message": "cLoTw calculated successfully", "nLoTw": nlotw}
+        publish_trust_scores(nlotw)
+        return {"message": "nLoTw calculated and published", "nLoTw": nlotw}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
