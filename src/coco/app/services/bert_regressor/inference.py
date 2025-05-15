@@ -1,7 +1,10 @@
 import torch
 from transformers import BertTokenizer
 
+from coco.app.core.logger import get_logger
 from coco.app.services.bert_regressor.model import BERTForQuantification
+
+logger = get_logger(__name__)
 
 class InferenceHandler():
     def __init__(self, model_weights_path):
@@ -11,6 +14,7 @@ class InferenceHandler():
 
     def load_model(self, model_weights_path):
         model = BERTForQuantification()
+        logger.info(f"Loading model from {model_weights_path}")
         model.load_state_dict(torch.load(model_weights_path, map_location=self.device))
         model.to(self.device)
         model.eval()

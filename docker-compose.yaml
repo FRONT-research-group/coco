@@ -1,0 +1,11 @@
+services:
+  api:
+    build: .
+    container_name: coco-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage/model:/model
+    environment:
+      - MODEL_PATH=/model/bert_model.pth
+    restart: unless-stopped

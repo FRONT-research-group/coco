@@ -1,1 +1,0 @@
-MODEL_STORAGE = "/Users/georgebatsis/Documents/FRONT/coco/storage"
