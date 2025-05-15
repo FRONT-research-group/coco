@@ -38,6 +38,8 @@ ghp-import==2.1.0
 h11==0.16.0
     # via httpcore
     # via uvicorn
+hf-xet==1.1.1
+    # via coco
 httpcore==1.0.9
     # via httpx
 httpx==0.28.1
@@ -93,6 +95,8 @@ pytest==8.3.5
     # via coco
 python-dateutil==2.9.0.post0
     # via ghp-import
+python-dotenv==1.1.0
+    # via coco
 pyyaml==6.0.2
     # via huggingface-hub
     # via mkdocs

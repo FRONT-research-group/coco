@@ -1,5 +1,8 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from coco.app.controllers import data_controller, lotw_controller
+
+load_dotenv()
 
 app = FastAPI(
     title="Text Regression API",

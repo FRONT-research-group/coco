@@ -3,13 +3,13 @@ import math
 from collections import defaultdict
 from typing import Dict, List
 
-from coco.app.core import state, config
 from coco.app.core.logger import get_logger
+from coco.app.core import state
 from coco.app.models.lotw_models import LabeledText
 from coco.app.services.bert_regressor.inference import InferenceHandler
 
 logger = get_logger(__name__)
-_inference_handler = InferenceHandler(os.path.join(config.MODEL_STORAGE, "final_bert_model.pth"))
+_inference_handler = InferenceHandler(os.getenv("MODEL_PATH", "/models/bert_model.pth"))
 
 class LoTWService:
     def predict_score(self, text: str, class_type: int) -> float:

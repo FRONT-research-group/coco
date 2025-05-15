@@ -6,6 +6,8 @@ Initial version in this repo: https://github.com/FRONT-research-group/Cognitive_
 Credits: [Ilias](https://github.com/IliasAlex) 
 
 
+SOS: A .env file with the model directory (only the directory). Save the model to a path/to/dir/bert_model.pth
+
 
 ```bash
 curl -X POST http://localhost:8000/data/submit \
