@@ -16,6 +16,7 @@ dependencies = [
     "pyswip>=0.3.2",
     "python-dotenv>=1.1.0",
     "hf-xet>=1.1.1",
+    "confluent-kafka>=2.10.0",
 ]
 
 huggingface_hub = { extras = ["hf_xet"] }
