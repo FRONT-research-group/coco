@@ -6,8 +6,14 @@ Initial version in this repo: https://github.com/FRONT-research-group/Cognitive_
 Credits: [Ilias](https://github.com/IliasAlex) 
 
 
-SOS: A .env file with the model directory (only the directory). Save the model to a path/to/dir/bert_model.pth
+## Instructions
 
+1. Save the model in the project directory in this path: ```storage/model/bert_model.pth```
+2. Run ```docker compose up```
+
+## API usage
+
+1. Submit data to the CoCo:
 
 ```bash
 curl -X POST http://localhost:8000/data/submit \
@@ -31,7 +37,10 @@ curl -X POST http://localhost:8000/data/submit \
       { "label": "Safety", "text": "Physical equipment should not pose danger to users." }
     ]
   }'
+```
 
+2. Calculate trust scores when you are ready:
+   
+```bash
 curl -X POST http://localhost:8000/lotw/calculate
-curl http://localhost:8000/lotw/nlotw
 ```

@@ -11,7 +11,7 @@ TRUST_TOPIC = os.getenv("KAFKA_TOPIC", "trust-scores")
 
 producer = Producer({'bootstrap.servers': KAFKA_BROKER})
 
-def publish_trust_scores(nlotw: dict):
+def publish_trust_scores(nlotw: dict, clotw: dict):
     """
     Publish the given trust scores to the Kafka topic specified in the KAFKA_TOPIC environment variable.
 
@@ -19,7 +19,12 @@ def publish_trust_scores(nlotw: dict):
     :type nlotw: dict
     """
     try:
-        message = json.dumps(nlotw)
+        message = {
+            "nlotw": nlotw,
+            "clotw": clotw 
+        }
+
+        message = json.dumps(message)
         producer.produce(TRUST_TOPIC, message.encode("utf-8"))
         producer.flush()
         logger.info(f"Published trust scores to Kafka: {message}")

@@ -6,6 +6,7 @@ consumer = Consumer({
     "group.id": "tf-privacy",
     "auto.offset.reset": "earliest"
 })
+
 consumer.subscribe(["trust-scores"])
 
 while True:
