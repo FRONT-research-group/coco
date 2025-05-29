@@ -19,3 +19,7 @@ while True:
 
     payload = json.loads(msg.value().decode("utf-8"))
     print(payload)
+
+    # Get the key from the message
+    key = msg.key().decode("utf-8") if msg.key() else None
+    print(f"Key: {key}")

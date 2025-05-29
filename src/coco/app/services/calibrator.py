@@ -127,7 +127,6 @@ class Calibrator:
         prolog = load_prolog_knowledge(path)
 
         for label, scores in nlotw_scores.items():
-            logger.info(f"IN CALIBRATORRRR Label: {label}, Scores: {scores}")
             avg_score = sum(scores) / len(scores)
             flavor = get_flavor(prolog, avg_score, available_cpu, available_memory)
             calibrated_score = get_flavor_upper_bound(prolog, flavor)

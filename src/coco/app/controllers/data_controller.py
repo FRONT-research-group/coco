@@ -13,3 +13,9 @@ def submit_data(data: DataInput):
 @router.get("/status", response_model=StatusOutput)
 def get_status():
     return StatusOutput(calculating=state.calculating, data_count=len(state.stored_data))
+
+@router.get("/reset")
+def clear_data():
+    state.stored_data.clear()
+    state.calculating = False
+    return {"message": "Data cleared successfully", "count": len(state.stored_data)}

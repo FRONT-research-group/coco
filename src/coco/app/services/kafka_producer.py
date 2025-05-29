@@ -24,8 +24,9 @@ def publish_trust_scores(nlotw: dict, clotw: dict):
             "clotw": clotw 
         }
 
+        max_key = max(nlotw, key=nlotw.get)
         message = json.dumps(message)
-        producer.produce(TRUST_TOPIC, message.encode("utf-8"))
+        producer.produce(TRUST_TOPIC, message.encode("utf-8"), key=max_key.encode("utf-8"))
         producer.flush()
         logger.info(f"Published trust scores to Kafka: {message}")
     except Exception as e:
