@@ -61,40 +61,33 @@ RESOURCES_LIST = [
     }
 ]
 
-def load_prolog_knowledge(base_file):
-    prolog = Prolog()
-    prolog.consult(base_file)
-    return prolog
-
-def get_flavor_upper_bound(prolog, flavor_name):
-    """
-    Calls the Prolog rule `flavor_upper_bound/2` to retrieve the max score of a given flavor.
-    """
-    query = f"flavor_upper_bound({flavor_name}, MaxScore)."
-    result = list(prolog.query(query))
-
-    if result:
-        return result[0]["MaxScore"]  # Extract max score from Prolog response
-    else:
-        return None  # No matching flavor found
-    
-def get_flavor(prolog, score, cpu, memory):
-    query = list(prolog.query(f"assign_flavor({score}, {cpu}, {memory}, Flavor)"))
-    if query:
-        return query[0]["Flavor"]
-
-    # Fallback logic
-    fallback_query = list(prolog.query(f"fallback_flavor({cpu}, {memory}, Flavor)"))
-    if fallback_query:
-        return fallback_query[0]["Flavor"]
-
-    return "Insufficient Resources"
-
 class Calibrator:
+    """
+    The Calibrator class is responsible for calibrating the given nLoTW scores using the available resources.
+    """
     def __init__(self):
+        """
+        Initialize the Calibrator class.
+
+        The Calibrator class takes no parameters and uses the CALIBRATION_DATA
+        constant to determine the available resources for each node.
+
+        :ivar calibration_data: A list of dictionaries, where each dictionary contains
+            the hostname, available CPU and available memory for each node
+        :type calibration_data: List[Dict[str, Any]]
+        """
         pass
     
     def calibrate(self, nlotw_scores):
+        """
+        Calibrate the given nLoTW scores using the available resources.
+
+        :param nlotw_scores: A dictionary where the keys are the labels and the values are lists of scores
+        :type nlotw_scores: Dict[str, List[float]]
+
+        :return: A list of tuples, where each tuple contains a label and its calibrated score
+        :rtype: List[Tuple[str, float]]
+        """
         # Add resources like this now
         resources = RESOURCES_LIST
         for resource in resources:
@@ -138,6 +131,60 @@ class Calibrator:
             
         return calibrated_scores_list
 
+def load_prolog_knowledge(base_file):
+    """
+    Loads a Prolog file and returns the associated Prolog instance.
+
+    :param base_file: The path to the Prolog file
+    :type base_file: str or Path
+    :return: The Prolog instance
+    :rtype: Prolog
+    """
+    prolog = Prolog()
+    prolog.consult(base_file)
+    return prolog
+
+def get_flavor_upper_bound(prolog, flavor_name):
+    """
+    Calls the Prolog rule `flavor_upper_bound/2` to retrieve the max score of a given flavor.
+    """
+    query = f"flavor_upper_bound({flavor_name}, MaxScore)."
+    result = list(prolog.query(query))
+
+    if result:
+        return result[0]["MaxScore"]  # Extract max score from Prolog response
+    else:
+        return None  # No matching flavor found
+    
+def get_flavor(prolog, score, cpu, memory):
+    """
+    Calls the Prolog rules `assign_flavor/4` and `fallback_flavor/4` to retrieve the flavor name that matches the given score, CPU, and memory.
+
+    The rules are called in the following order:
+    1. `assign_flavor/4` with the given score, CPU, and memory.
+    2. If no matching flavor is found, `fallback_flavor/4` with the given CPU and memory.
+
+    :param prolog: The Prolog instance
+    :type prolog: Prolog
+    :param score: The score to match
+    :type score: float
+    :param cpu: The CPU to match
+    :type cpu: float
+    :param memory: The memory to match
+    :type memory: float or str
+    :return: The flavor name that matches the given score, CPU, and memory, or "Insufficient Resources" if no matching flavor is found
+    :rtype: str
+    """
+    query = list(prolog.query(f"assign_flavor({score}, {cpu}, {memory}, Flavor)"))
+    if query:
+        return query[0]["Flavor"]
+
+    # Fallback logic
+    fallback_query = list(prolog.query(f"fallback_flavor({cpu}, {memory}, Flavor)"))
+    if fallback_query:
+        return fallback_query[0]["Flavor"]
+
+    return "Insufficient Resources"
 
 if __name__ == "__main__":
     calibrator = Calibrator()
