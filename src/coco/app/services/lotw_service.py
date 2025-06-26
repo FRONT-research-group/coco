@@ -14,6 +14,9 @@ _inference_handler = InferenceHandler(os.getenv("MODEL_PATH", "/models/bert_mode
 _calibrator = Calibrator()
 
 class LoTWService:
+    """
+    LoTWService is a class that provides methods for calculating LoTW (LoTW) and nLoTW (nLoTW) scores for text data.
+    """
     def predict_score(self, text: str, class_type: int) -> float:
         """
         Predicts a score for the given text based on the specified class type.
@@ -66,6 +69,15 @@ class LoTWService:
         return nlotw
     
     def calculate_clotw(self, data: List[LabeledText]) -> Dict[str, float]:
+        """
+        Calculates the calibrated LoTW (cLoTW) values for the given labeled data.
+
+        Args:
+            data (List[LabeledText]): A list of labeled text data points.
+
+        Returns:
+            Dict[str, float]: A dictionary where the keys are the labels and the values are the cLoTW values.
+        """
         logger.info(f"Calculating nLoTw for {len(data)} items...")
         grouped_data = defaultdict(list)
         
@@ -122,6 +134,12 @@ class LoTWService:
         return wtf
 
     def compute_clotw_scores(self) -> Dict[str, float]:
+        """
+        Computes and returns both the nLoTW and cLoTW scores for the currently stored data.
+
+        Returns:
+            Tuple[Dict[str, float], Dict[str, float]]: A tuple containing two dictionaries. The first dictionary contains the nLoTW values, and the second contains the cLoTW values.
+        """
         if not state.stored_data:
             raise ValueError("No data available")
 

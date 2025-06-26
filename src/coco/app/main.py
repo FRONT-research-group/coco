@@ -9,8 +9,6 @@ app = FastAPI(
     version="0.1",
     description="""
     This API provides the Cognitive Coordinator of the SAFE-6G project.
-
-    **Trust functions supported**: Privacy, Reliability, Security, Resilience, Safety
     """,
     contact={
         "name": "George Batsis",
