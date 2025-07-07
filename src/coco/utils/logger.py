@@ -1,31 +1,43 @@
-import sys
 import logging
+import sys
+from typing import Optional
 
-def get_logger(name: str) -> logging.Logger:
+def get_logger(name: str, log_level: int = logging.INFO, file_path: Optional[str] = None) -> logging.Logger:
     """
-    Gets a logger with the given name and configures it to output logs at INFO level
-    to stdout.
+    Sets up a logger with optional file output and consistent formatting.
 
-    If the logger has not been configured yet, this function will add a StreamHandler
-    with a formatter that outputs logs in the format:
+    Args:
+        name (str): Logger name.
+        log_level (int): Logging level.
+        file_path (str, optional): If provided, logs will also be saved to this file.
 
-        [%(asctime)s] [%(levelname)s] [%(name)s] %(message)s
-
-    The logger is configured to output logs at the INFO level.
-
-    :param name: The name of the logger.
-    :return: The configured logger.
+    Returns:
+        logging.Logger: Configured logger instance.
     """
     logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(log_level)
+    logger.propagate = False  # Prevent double logging
 
-    if not logger.handlers:
-        handler = logging.StreamHandler(sys.stdout)
-        formatter = logging.Formatter(
-            '[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+    # Clear existing handlers
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(log_level)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    # Optional file handler
+    if file_path is not None:
+        file_handler = logging.FileHandler(file_path)
+        file_handler.setLevel(log_level)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
     return logger

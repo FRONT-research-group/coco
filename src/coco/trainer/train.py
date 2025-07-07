@@ -1,4 +1,5 @@
 import os
+import json
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -23,7 +24,7 @@ class Trainer:
         save_dir: str,
         lr: float=2e-5,
         weight_decay: float=0.01,
-        early_stopping_patience: int=3,
+        early_stopping_patience: int=5,
         max_grad_norm: float=1.0
     ) -> None:
         """
@@ -74,8 +75,10 @@ class Trainer:
         best_val_loss = float("inf")
         patience_counter = 0
 
+        total_metrics = {}
+
         for epoch in range(1, epochs + 1):
-            logger.info(f"\nEpoch {epoch}/{epochs}")
+            logger.info(f"Epoch {epoch}/{epochs}")
             self.model.train()
             running_loss = 0.0
             all_targets = []
@@ -116,20 +119,32 @@ class Trainer:
             logger.info(f"Training Metrics - MAE: {mae:.4f}, MSE: {mse:.4f}, RMSE: {rmse:.4f}, R²: {r2:.4f}, MAPE: {mape:.4f}")
 
             # Validation
-            val_loss = self.validate()
+            metrics = self.validate()
+
+            val_loss = metrics['val_loss']
+
+            metrics["train_loss"] = avg_train_loss
+
+            total_metrics[epoch] = metrics
 
             # Early stopping check
             if val_loss < best_val_loss:
-                logger.info("✅ Validation loss improved. Saving model.")
+                logger.info("Validation loss improved. Saving model.")
                 best_val_loss = val_loss
                 patience_counter = 0
                 self.save_model()
             else:
                 patience_counter += 1
-                logger.info(f"⚠️ Validation loss did not improve. Patience: {patience_counter}/{self.early_stopping_patience}")
+                logger.info(f"Validation loss did not improve. Patience: {patience_counter}/{self.early_stopping_patience}")
                 if patience_counter >= self.early_stopping_patience:
-                    logger.info("⏹️ Early stopping triggered.")
+                    logger.info("⏹Early stopping triggered.")
                     break
+
+        # Save metrics
+        with open(os.path.join(self.save_dir, "metrics.json"), "w") as f:
+            json.dump(total_metrics, f, indent=4)
+
+        return total_metrics
 
     def validate(self) -> float:
         """
@@ -182,7 +197,17 @@ class Trainer:
         logger.info(f"Validation Metrics - MAE: {mae:.4f}, MSE: {mse:.4f}, RMSE: {rmse:.4f}, R²: {r2:.4f}, MAPE: {mape:.4f}")
 
         self.final_val_loss = avg_val_loss
-        return avg_val_loss
+
+        metrics = {
+            "mae": mae,
+            "mse": mse,
+            "rmse": rmse,
+            "r2": r2,
+            "mape": mape,
+            "val_loss": avg_val_loss
+        }
+
+        return metrics
 
     def calculate_metrics(self, targets: list, predictions: list) -> tuple:
         """

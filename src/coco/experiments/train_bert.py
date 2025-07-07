@@ -1,11 +1,9 @@
 import torch
 
+from coco.config.config import DATASET_DIR, REGISTRY_DIR
 from coco.data.data_handler import load_dataset
 from coco.models.bert import BERTForQuantification
 from coco.trainer.train import Trainer
-
-DATASET_DIR = "/home/bilito/Documents/FRONT_RG/coco/notebooks/data"
-REGISTRY_DIR = "/home/bilito/Documents/FRONT_RG/coco/notebooks/data/registry"
 
 def run():
 
