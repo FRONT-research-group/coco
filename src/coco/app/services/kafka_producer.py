@@ -2,7 +2,7 @@ import os
 import json
 from confluent_kafka import Producer
 
-from coco.app.core.logger import get_logger
+from coco.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

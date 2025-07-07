@@ -2,6 +2,8 @@ import random
 import pandas as pd
 import torch
 
+from typing import List
+from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from transformers import BertTokenizer
 from nltk.corpus import wordnet
@@ -107,7 +109,7 @@ def augment_text(text: str) -> str:
     augmentation = random.choice(techniques)
     return augmentation(text)
 
-def load_data_from_csv(file_path: str, n_augmentations: int=3) -> pd.DataFrame:
+def load_data_from_csv(file_path: str, n_augmentations: int=5) -> pd.DataFrame:
     """
     Loads the dataset from the specified CSV file, normalizes the scores between 0 and 1 if needed, and applies data augmentation techniques to the text data.
 
@@ -137,7 +139,7 @@ def load_data_from_csv(file_path: str, n_augmentations: int=3) -> pd.DataFrame:
 
     return df
 
-def load_dataset(file_path: str, batch_size: int=16, max_len: int=128, augment: bool=True) -> tuple[DataLoader, DataLoader]:
+def load_dataset(file_path: str, batch_size: int=16, max_len: int=128, augment: bool=True, split: List[float]=[0.7, 0.15, 0.15], model_type: str='DL') -> tuple[DataLoader, DataLoader]:
     """
     Loads the dataset from a CSV file, normalizes the scores between 0 and 1 if needed, applies data augmentation techniques to the text data, and returns DataLoaders for training and validation.
 
@@ -150,19 +152,42 @@ def load_dataset(file_path: str, batch_size: int=16, max_len: int=128, augment: 
     Returns:
         tuple: A tuple containing the training and validation DataLoaders.
     """
-    df = load_data_from_csv(file_path) if augment else pd.read_csv(file_path)
-    data = df.to_dict(orient='records')
+    data_df = load_data_from_csv(file_path) if augment else pd.read_csv(file_path)
 
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    dataset = TextDataset(data, tokenizer, max_len=max_len)
+    train_df, test_df = train_test_split(data_df, test_size=split[1] + split[2], random_state=42)
+    val_df, test_df = train_test_split(test_df, test_size=split[2] / (split[1] + split[2]), random_state=42)
 
-    # Split the dataset into training and validation sets
-    train_size = int(0.8 * len(dataset))
-    val_size = len(dataset) - train_size
-    train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
+    if model_type=="baseline":
+        return train_df, val_df, test_df
+    else:
 
-    # DataLoader objects
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
+        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        train_dataset = TextDataset(train_df.to_dict(orient='records'), tokenizer, max_len=max_len)
+        val_dataset = TextDataset(val_df.to_dict(orient='records'), tokenizer, max_len=max_len)
+        test_dataset = TextDataset(test_df.to_dict(orient='records'), tokenizer, max_len=max_len)
 
-    return train_dataloader, val_dataloader
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
+        test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
+
+        return train_dataloader, val_dataloader, test_dataloader
+    
+    #data = df.to_dict(orient='records')
+
+    #print(data)
+
+    #tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    #dataset = TextDataset(data, tokenizer, max_len=max_len)
+
+    # Split the dataset into training, validation and test sets: 70, 15 and 15
+    #train_size = int(0.7 * len(dataset))
+    #val_size = int(0.15 * len(dataset))
+    #test_size = len(dataset) - train_size - val_size
+
+    #train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, val_size, test_size], generator=torch.Generator().manual_seed(42))
+
+    #train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    #val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
+    #test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
+
+    #return train_dataloader, val_dataloader, test_dataloader

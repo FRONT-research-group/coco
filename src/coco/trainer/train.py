@@ -1,4 +1,5 @@
 import os
+import json
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -19,11 +20,12 @@ class Trainer:
         model: nn.Module,
         train_dataloader: torch.utils.data.DataLoader,
         val_dataloader: torch.utils.data.DataLoader,
+        test_dataloader: torch.utils.data.DataLoader,
         device: torch.device,
         save_dir: str,
         lr: float=2e-5,
         weight_decay: float=0.01,
-        early_stopping_patience: int=3,
+        early_stopping_patience: int=5,
         max_grad_norm: float=1.0
     ) -> None:
         """
@@ -33,6 +35,7 @@ class Trainer:
             model (nn.Module): the model to be trained
             train_dataloader (DataLoader): the dataloader for training
             val_dataloader (DataLoader): the dataloader for validation
+            test_dataloader (DataLoader): the dataloader for testing
             device (torch.device): the device to be used for training
             save_dir (str): the directory to save the model and logs
             lr (float, optional): the learning rate. Defaults to 2e-5.
@@ -43,6 +46,7 @@ class Trainer:
         self.model = model.to(device)
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
+        self.test_dataloader = test_dataloader
         self.device = device
         self.save_dir = save_dir
         os.makedirs(self.save_dir, exist_ok=True)
@@ -74,8 +78,10 @@ class Trainer:
         best_val_loss = float("inf")
         patience_counter = 0
 
+        total_metrics = {}
+
         for epoch in range(1, epochs + 1):
-            logger.info(f"\nEpoch {epoch}/{epochs}")
+            logger.info(f"Epoch {epoch}/{epochs}")
             self.model.train()
             running_loss = 0.0
             all_targets = []
@@ -116,22 +122,41 @@ class Trainer:
             logger.info(f"Training Metrics - MAE: {mae:.4f}, MSE: {mse:.4f}, RMSE: {rmse:.4f}, R²: {r2:.4f}, MAPE: {mape:.4f}")
 
             # Validation
-            val_loss = self.validate()
+            metrics = self.validate()
+
+            val_loss = metrics['val_loss']
+
+            metrics["train_loss"] = avg_train_loss
+
+            total_metrics[epoch] = metrics
 
             # Early stopping check
             if val_loss < best_val_loss:
-                logger.info("✅ Validation loss improved. Saving model.")
+                logger.info("Validation loss improved. Saving model.")
                 best_val_loss = val_loss
                 patience_counter = 0
                 self.save_model()
             else:
                 patience_counter += 1
-                logger.info(f"⚠️ Validation loss did not improve. Patience: {patience_counter}/{self.early_stopping_patience}")
+                logger.info(f"Validation loss did not improve. Patience: {patience_counter}/{self.early_stopping_patience}")
                 if patience_counter >= self.early_stopping_patience:
-                    logger.info("⏹️ Early stopping triggered.")
+                    logger.info("⏹Early stopping triggered.")
                     break
 
-    def validate(self) -> float:
+        test_metrics = self.validate(mode="test")
+
+        total_metrics = {
+            "train": total_metrics,
+            "test": test_metrics
+        }
+
+        # Save metrics
+        with open(os.path.join(self.save_dir, "metrics.json"), "w") as f:
+            json.dump(total_metrics, f, indent=4)
+
+        return total_metrics
+
+    def validate(self, mode: str="val") -> float:
         """
         Validates the model on the validation dataset and calculates validation loss and metrics.
 
@@ -146,14 +171,27 @@ class Trainer:
             - Prints the validation loss and various evaluation metrics.
             - Updates the attribute `self.final_val_loss` with the average validation loss.
         """
+        if mode == "test":
+            logger.info("Validating on test dataset")
 
-        self.model.eval()
+            # Load the best model
+            best_model_path = os.path.join(self.save_dir, "best_model.pth")
+            self.model.load_state_dict(torch.load(best_model_path, map_location=self.device))
+        else:
+            logger.info("Validating on validation dataset")
+            self.model.eval()
+
         running_val_loss = 0.0
         all_targets = []
         all_predictions = []
 
+        if mode == "val":
+            loader = self.val_dataloader
+        elif mode == "test":
+            loader = self.test_dataloader
+
         with torch.no_grad():
-            for batch in tqdm(self.val_dataloader, desc="Validation"):
+            for batch in tqdm(loader, desc="Validation"):
                 input_ids = batch['input_ids'].to(self.device)
                 attention_mask = batch['attention_mask'].to(self.device)
                 score = batch['score'].to(self.device)
@@ -176,34 +214,27 @@ class Trainer:
                 all_targets.extend(score.cpu().numpy())
 
         mae, mse, rmse, r2, mape = self.calculate_metrics(all_targets, all_predictions)
-        avg_val_loss = running_val_loss / len(self.val_dataloader)
+        avg_val_loss = running_val_loss / len(loader)
 
-        logger.info(f"Validation loss: {avg_val_loss:.4f}")
-        logger.info(f"Validation Metrics - MAE: {mae:.4f}, MSE: {mse:.4f}, RMSE: {rmse:.4f}, R²: {r2:.4f}, MAPE: {mape:.4f}")
+        if mode == "val":
+            logger.info(f"Validation loss: {avg_val_loss:.4f}")
+            logger.info(f"Validation Metrics - MAE: {mae:.4f}, MSE: {mse:.4f}, RMSE: {rmse:.4f}, R²: {r2:.4f}, MAPE: {mape:.4f}")
+        elif mode == "test":
+            logger.info(f"Test loss: {avg_val_loss:.4f}")
+            logger.info(f"Test Metrics - MAE: {mae:.4f}, MSE: {mse:.4f}, RMSE: {rmse:.4f}, R²: {r2:.4f}, MAPE: {mape:.4f}")
 
         self.final_val_loss = avg_val_loss
-        return avg_val_loss
 
-    def calculate_metrics(self, targets: list, predictions: list) -> tuple:
-        """
-        Calculates various evaluation metrics from a list of targets and predictions.
+        metrics = {
+            "mae": mae,
+            "mse": mse,
+            "rmse": rmse,
+            "r2": r2,
+            "mape": mape,
+            "val_loss": avg_val_loss
+        }
 
-        Args:
-        - targets (list): The target values.
-        - predictions (list): The predicted values.
-
-        Returns:
-        - tuple: The mean absolute error, mean squared error, root mean squared error,
-          R-squared, and mean absolute percentage error.
-        """
-        mae = mean_absolute_error(targets, predictions)
-        mse = ((torch.tensor(targets) - torch.tensor(predictions)) ** 2).mean().item()
-        rmse = mse ** 0.5
-        r2 = r2_score(targets, predictions)
-        mape = torch.mean(
-            torch.abs((torch.tensor(targets) - torch.tensor(predictions)) / torch.tensor(targets))
-        ).item() * 100
-        return mae, mse, rmse, r2, mape
+        return metrics
 
     def save_model(self) -> None:
         """
@@ -224,3 +255,25 @@ class Trainer:
         - float: The best validation loss. If no validation loss was found, returns None.
         """
         return getattr(self, "final_val_loss", None)
+    
+    @staticmethod
+    def calculate_metrics(targets: list, predictions: list) -> tuple:
+        """
+        Calculates various evaluation metrics from a list of targets and predictions.
+
+        Args:
+        - targets (list): The target values.
+        - predictions (list): The predicted values.
+
+        Returns:
+        - tuple: The mean absolute error, mean squared error, root mean squared error,
+          R-squared, and mean absolute percentage error.
+        """
+        mae = mean_absolute_error(targets, predictions)
+        mse = ((torch.tensor(targets) - torch.tensor(predictions)) ** 2).mean().item()
+        rmse = mse ** 0.5
+        r2 = r2_score(targets, predictions)
+        mape = torch.mean(
+            torch.abs((torch.tensor(targets) - torch.tensor(predictions)) / torch.tensor(targets))
+        ).item() * 100
+        return mae, mse, rmse, r2, mape

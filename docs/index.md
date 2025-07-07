@@ -2,7 +2,7 @@
 
 The **Cognitive Coordinator (CoCo)** is the AI-native trust orchestrator at the heart of the **SAFE-6G architecture**. It interprets user trust intents expressed in natural language and translates them into actionable system configurations, dynamically computing a **Level of Trustworthiness (LoT)** that aligns with both semantic intent and real-world resource constraints.
 
-![Cognitive Coordinator Architecture](./SAFE6G-CoCo.png)
+![Cognitive Coordinator Architecture](../assets/SAFE6G-CoCo.png)
 
 ## ✅ Key Features
 
@@ -47,18 +47,155 @@ $$
 cLoTW = \left( \frac{\sum_{j=1}^{5} V_j}{\sum_{j=1}^{5} V_j} \right) \cdot 100
 $$
 
+## 📊 BERT-Based Trust Quantification
+
+This BERT-based regression model estimates trustworthiness scores $[0, 100]$ for user-provided textual expressions across five trust dimensions: **Reliability**, **Privacy**, **Security**, **Safety**, and **Resilience**. Each trust function is assigned a dedicated regression head on top of a shared BERT encoder.
+
+### Model Architecture
+
+* **Base encoder**: `bert-base-uncased` from HuggingFace Transformers.
+* **Output heads**: Five parallel `nn.Linear` regressors (one per trust class).
+* **Input**: Natural language expressions + class label.
+* **Output**: Continuous trustworthiness score per expression.
+
+### Training Overview
+
+* **Dataset**: Expert-annotated expressions with associated trust scores.
+* **Loss function**: Mean Squared Error (MSE).
+* **Training schedule**: 500 epochs with early stopping.
+* **Data split**: 70% training / 15% validation / 15% test (same indices used as in baseline).
+
+---
+
+### Training Results
+
+**Epoch-wise Losses**
+
+Training and validation losses decreased consistently over time, indicating stable convergence without overfitting.
+
+![Loss Plot](../assets/losses.png)
+
+**R² Score Evolution**
+
+Validation R² improves steadily, reaching >0.9, confirming good predictive capability on unseen data.
+
+![R2 Plot](../assets/val_r2.png)
+
+**Error Metrics (MAE & RMSE)**
+
+Both MAE and RMSE show a decreasing trend, reflecting error reduction during training.
+
+![Error Plot](../assets/val_error.png)
+
+**Best Validation Metrics**
+
+| Metric        | Value         |
+| --------------| ------------- |
+| MSE/Val Loss  | 0.004798      |
+| MAE           | 0.0476        |
+| RMSE          | 0.069267      |
+| R² Score      | 0.922622      |
+| Epoch         | 12            |
+
+These were recorded at the epoch with **lowest validation loss**.
+
+---
+
+**Final Test Set Performance**
+
+| Metric   | Value          |
+| -------- | -------------  |
+| MAE      | 0.048383       |
+| RMSE     | 0.062127       |
+| R² Score | 0.935158       |
+
+Test results confirm generalization to unseen data and validate the trustworthiness of BERT-based quantification.
 
 ## 🚀 Getting Started
 
-### 1. Model Setup
+### Environment Setup with Rye
 
-Save the pretrained BERT regressor file to the following path:
+We use [**rye**](https://rye-up.com) for Python environment management.
+
+#### Prerequisites
+
+Ensure `rye` is installed:
+
+```bash
+curl -sSf https://rye-up.com/get | bash
+source ~/.bashrc  # or ~/.zshrc
+```
+
+#### Install All Dependencies
+
+```bash
+rye sync  # installs from pyproject.toml
+```
+
+### Train Trust Quantification Models
+
+Run end-to-end experiments using one of the following scripts:
+
+`src/coco/experiments/train_baseline.py`
+
+**OR**
+
+`src/coco/experiments/train_bert.py`
+
+Alternatively, check the worflow on the notebook: `notebooks/ML_Models.ipynb`. This process described in the following sections:
+
+#### Configuration Import
+
+```python
+from coco.config.config import REGISTRY_DIR
+```
+
+This path (`REGISTRY_DIR`) controls where model weights and metrics are stored (e.g., `model_registry/bert_model.pth`, `metrics.json`).
+
+#### Run the Baseline Experiment
+
+```python
+from coco.experiments.train_baseline import run as run_baseline
+run_baseline()
+```
+
+* **Model**: TF-IDF + Gradient Boosting Regression
+* **Usage**: Establishes a simple ML benchmark
+
+#### Run the BERT-Based Experiment
+
+```python
+from coco.experiments.train_bert import run as run_bert
+run_bert()
+```
+
+* **Model**: `bert-base-uncased` + 5 regression heads
+* **Trainer**: Early stopping, augmentation, evaluation logging
+
+### Model Artifacts
+
+After training, models and logs are stored in:
 
 ```
-storage/model/bert\_model.pth
+model_registry/
+├── best_model.pth         # Saved BERT checkpoint
+├── metrics.json           # All training/validation/test metrics
 ```
 
-### 2. Run the System
+### Evaluation & Inference
+
+You can run inference from the notebook or script:
+
+```python
+from coco.inference.bert_inference import InferenceHandler
+
+inf_h = InferenceHandler(model_weights_path=os.path.join(REGISTRY_DIR, "best_model.pth"))
+inf_h.inference("Respect user data", "Privacy")
+```
+
+## CoCo Usage
+
+### Run the System
 
 Launch the CoCo API and its core services via Docker:
 
@@ -66,9 +203,9 @@ Launch the CoCo API and its core services via Docker:
 docker compose up --build
 ```
 
-## 📡 API Usage
+### API Usage
 
-### 1. Submit Trust-Labeled Data
+#### 1. Submit Trust-Labeled Data
 
 Submit input sentences with labeled trust categories (e.g., "Privacy", "Security"):
 
@@ -84,7 +221,7 @@ curl -X POST http://localhost:8000/data/submit \
   }'
 ```
 
-### 2. Compute Trust Scores
+#### 2. Compute Trust Scores
 
 Trigger the trustworthiness computation once data has been submitted:
 
@@ -98,14 +235,14 @@ The response will include:
 * `cLoTW`: Calibrated score constrained by system resources
 * Per-TF breakdown: weights, predicted scores, and applied caps
 
-## 📚 Architecture Overview
+### Architecture Overview
 
 * **NLP + Regression**: BERT-based sentence encoder with 5 specialized regression heads
 * **Reasoning Engine**: Applies resource-awareness to compute feasible trust levels
 * **Orchestrator Integration**: Uses a broker-based publish/subscribe system for TF control
 * **Monitoring & Feedback**: Supports closed-loop adjustments
 
-## 🧾 Sample Data Set (Excerpt)
+### Sample Data Set
 
 | Trust Function | Sample Input                                   |
 | -------------- | ---------------------------------------------- |

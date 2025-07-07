@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, List
 from pyswip import Prolog
 
-from coco.app.core.logger import get_logger
+from coco.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

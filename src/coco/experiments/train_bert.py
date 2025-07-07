@@ -1,18 +1,16 @@
 import torch
 
+from coco.config.config import DATASET_DIR, REGISTRY_DIR
 from coco.data.data_handler import load_dataset
 from coco.models.bert import BERTForQuantification
 from coco.trainer.train import Trainer
-
-DATASET_DIR = "/home/bilito/Documents/FRONT_RG/coco/notebooks/data"
-REGISTRY_DIR = "/home/bilito/Documents/FRONT_RG/coco/notebooks/data/registry"
 
 def run():
 
     file_path = f"{DATASET_DIR}/dataset.csv"
 
     # Load the dataset from CSV file
-    train_dataloader, val_dataloader = load_dataset(file_path, batch_size=32, augment=True)
+    train_dataloader, val_dataloader, test_dataloader = load_dataset(file_path, batch_size=16, augment=True)
 
     # Initialize the model
     model = BERTForQuantification()
@@ -26,6 +24,7 @@ def run():
         model=model,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
+        test_dataloader=test_dataloader,
         device=device,
         save_dir=REGISTRY_DIR
     )
