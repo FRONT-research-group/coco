@@ -7,6 +7,13 @@ copyright: |
   Copyright &copy; 2025-2025 FRONT Research Group @ IIT/NCSRD </a>
 nav:
   - Overview: index.md
+  - Code Reference:
+    - Models:
+      - BERT: src/code_ref/models/bert.md
+    - Data:
+      - Data Handler: src/code_ref/data/data_handler.md
+    - Trainer: src/code_ref/trainer/trainer.md
+
 theme:
   name: material
   features:
