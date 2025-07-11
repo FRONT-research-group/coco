@@ -15,6 +15,9 @@ annotated-types==0.7.0
 anyio==4.9.0
     # via httpx
     # via starlette
+attrs==25.3.0
+    # via jsonschema
+    # via referencing
 babel==2.17.0
     # via mkdocs-material
 backrefs==5.9
@@ -25,8 +28,11 @@ certifi==2025.4.26
     # via requests
 charset-normalizer==3.4.2
     # via requests
+choreographer==1.0.9
+    # via kaleido
 click==8.1.8
     # via mkdocs
+    # via nltk
     # via uvicorn
 colorama==0.4.6
     # via griffe
@@ -35,6 +41,8 @@ confluent-kafka==2.10.0
     # via coco
 fastapi==0.115.12
     # via coco
+fastjsonschema==2.21.1
+    # via nbformat
 filelock==3.18.0
     # via huggingface-hub
     # via torch
@@ -69,6 +77,19 @@ jinja2==3.1.6
     # via mkdocs-material
     # via mkdocstrings
     # via torch
+joblib==1.5.1
+    # via nltk
+    # via scikit-learn
+jsonschema==4.24.0
+    # via nbformat
+jsonschema-specifications==2025.4.1
+    # via jsonschema
+jupyter-core==5.8.1
+    # via nbformat
+kaleido==1.0.0
+logistro==1.1.0
+    # via choreographer
+    # via kaleido
 markdown==3.8
     # via mkdocs
     # via mkdocs-autorefs
@@ -103,21 +124,73 @@ mkdocstrings-python==1.16.12
     # via coco
 mpmath==1.3.0
     # via sympy
+narwhals==1.46.0
+    # via plotly
+nbformat==5.10.4
 networkx==3.4.2
     # via torch
+nltk==3.9.1
+    # via coco
 numpy==2.2.5
+    # via pandas
+    # via scikit-learn
+    # via scipy
     # via transformers
+nvidia-cublas-cu12==12.6.4.1
+    # via nvidia-cudnn-cu12
+    # via nvidia-cusolver-cu12
+    # via torch
+nvidia-cuda-cupti-cu12==12.6.80
+    # via torch
+nvidia-cuda-nvrtc-cu12==12.6.77
+    # via torch
+nvidia-cuda-runtime-cu12==12.6.77
+    # via torch
+nvidia-cudnn-cu12==9.5.1.17
+    # via torch
+nvidia-cufft-cu12==11.3.0.4
+    # via torch
+nvidia-cufile-cu12==1.11.1.6
+    # via torch
+nvidia-curand-cu12==10.3.7.77
+    # via torch
+nvidia-cusolver-cu12==11.7.1.2
+    # via torch
+nvidia-cusparse-cu12==12.5.4.2
+    # via nvidia-cusolver-cu12
+    # via torch
+nvidia-cusparselt-cu12==0.6.3
+    # via torch
+nvidia-nccl-cu12==2.26.2
+    # via torch
+nvidia-nvjitlink-cu12==12.6.85
+    # via nvidia-cufft-cu12
+    # via nvidia-cusolver-cu12
+    # via nvidia-cusparse-cu12
+    # via torch
+nvidia-nvtx-cu12==12.6.77
+    # via torch
+orjson==3.10.18
+    # via kaleido
 packaging==25.0
     # via huggingface-hub
+    # via kaleido
     # via mkdocs
+    # via plotly
     # via pytest
     # via transformers
 paginate==0.5.7
     # via mkdocs-material
+pandas==2.3.0
+    # via coco
 pathspec==0.12.1
     # via mkdocs
+pip==25.1.1
+    # via coco
 platformdirs==4.3.7
+    # via jupyter-core
     # via mkdocs-get-deps
+plotly==6.2.0
 pluggy==1.5.0
     # via pytest
 pydantic==2.11.4
@@ -135,8 +208,11 @@ pytest==8.3.5
     # via coco
 python-dateutil==2.9.0.post0
     # via ghp-import
+    # via pandas
 python-dotenv==1.1.0
     # via coco
+pytz==2025.2
+    # via pandas
 pyyaml==6.0.2
     # via huggingface-hub
     # via mkdocs
@@ -146,16 +222,30 @@ pyyaml==6.0.2
     # via transformers
 pyyaml-env-tag==0.1
     # via mkdocs
+referencing==0.36.2
+    # via jsonschema
+    # via jsonschema-specifications
 regex==2024.11.6
+    # via nltk
     # via transformers
 requests==2.32.3
     # via huggingface-hub
     # via mkdocs-material
     # via transformers
+rpds-py==0.26.0
+    # via jsonschema
+    # via referencing
 safetensors==0.5.3
     # via transformers
+scikit-learn==1.7.0
+    # via coco
+scipy==1.16.0
+    # via scikit-learn
 setuptools==80.4.0
     # via torch
+    # via triton
+simplejson==3.20.1
+    # via choreographer
 six==1.17.0
     # via python-dateutil
 sniffio==1.3.1
@@ -164,25 +254,36 @@ starlette==0.46.2
     # via fastapi
 sympy==1.14.0
     # via torch
+threadpoolctl==3.6.0
+    # via scikit-learn
 tokenizers==0.21.1
     # via transformers
 torch==2.7.0
     # via coco
 tqdm==4.67.1
     # via huggingface-hub
+    # via nltk
     # via transformers
+traitlets==5.14.3
+    # via jupyter-core
+    # via nbformat
 transformers==4.51.3
     # via coco
+triton==3.3.0
+    # via torch
 typing-extensions==4.13.2
     # via anyio
     # via fastapi
     # via huggingface-hub
     # via pydantic
     # via pydantic-core
+    # via referencing
     # via torch
     # via typing-inspection
 typing-inspection==0.4.0
     # via pydantic
+tzdata==2025.2
+    # via pandas
 urllib3==2.4.0
     # via requests
 uvicorn==0.34.2

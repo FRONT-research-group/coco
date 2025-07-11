@@ -1,8 +1,8 @@
 import torch
 from transformers import BertTokenizer
 
-from coco.app.core.logger import get_logger
-from coco.app.services.bert_regressor.model import BERTForQuantification
+from coco.utils.logger import get_logger
+from coco.models.bert import BERTForQuantification
 
 logger = get_logger(__name__)
 

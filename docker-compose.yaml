@@ -28,9 +28,9 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./storage/model:/model
+      - ./model_registry:/model
     environment:
-      - MODEL_PATH=/model/bert_model.pth
+      - MODEL_PATH=/model/best_model.pth
       - KAFKA_BROKER=kafka:9092
     depends_on:
       - kafka

@@ -1,22 +1,30 @@
+import torch
 import torch.nn as nn
+
 from transformers import BertModel
 
 class BERTForQuantification(nn.Module):
     """
     BERT-based model for quantification of trustworthiness.
     """
-    def __init__(self, bert_model_name='bert-base-uncased'):
+    def __init__(self, bert_model_name: str = 'bert-base-uncased') -> None:
         """
-        Initialize the BERT-based model for quantification.
-
-        The model is initialized with the following components:
-        - A BERT model with the given name (default: 'bert-base-uncased')
-        - Separate linear heads for each trust function (Reliability, Privacy, Security, Resilience, Safety)
-        - The output of the BERT model is passed through the corresponding head to predict the score for each trust function.
-
+        Initialize the BERTForQuantification model.
+        
+        This constructor sets up a BERT model with multiple regression heads for different trust functions.
+        
         Parameters:
-        - bert_model_name (str): The name of the BERT model to use (default: 'bert-base-uncased')
+            bert_model_name (str): The name of the pretrained BERT model to use. Default is 'bert-base-uncased'.
+        
+        Attributes:
+            bert: The BERT model loaded from the pretrained weights.
+            reliability_head: A linear layer to predict scores for the Reliability trust function.
+            privacy_head: A linear layer to predict scores for the Privacy trust function.
+            security_head: A linear layer to predict scores for the Security trust function.
+            resilience_head: A linear layer to predict scores for the Resilience trust function.
+            safety_head: A linear layer to predict scores for the Safety trust function.
         """
+
         super(BERTForQuantification, self).__init__()
         self.bert = BertModel.from_pretrained(bert_model_name)
         
@@ -27,7 +35,7 @@ class BERTForQuantification(nn.Module):
         self.resilience_head = nn.Linear(self.bert.config.hidden_size, 1)
         self.safety_head = nn.Linear(self.bert.config.hidden_size, 1)
 
-    def forward(self, input_ids, attention_mask, class_type):
+    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor, class_type: str) -> torch.Tensor:
         """
         Perform a forward pass to predict the score for the given input text.
 

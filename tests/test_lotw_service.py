@@ -15,6 +15,7 @@ def sample_data():
 
 @pytest.fixture(autouse=True)
 def clear_state():
+    
     state.stored_data.clear()
     state.nlotw_score = None
     state.calculating = False
