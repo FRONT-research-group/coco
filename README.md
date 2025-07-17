@@ -2,7 +2,7 @@
 
 The **Cognitive Coordinator (CoCo)** is the AI-native trust orchestrator at the heart of the **SAFE-6G architecture**. It interprets user trust intents expressed in natural language and translates them into actionable system configurations, dynamically computing a **Level of Trustworthiness (LoT)** that aligns with both semantic intent and real-world resource constraints.
 
-![Cognitive Coordinator Architecture](./docs/SAFE6G-CoCo.png)
+![Cognitive Coordinator Architecture](./assets/SAFE6G-CoCo.png)
 
 ## ✅ Key Features
 
