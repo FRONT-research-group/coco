@@ -3,4 +3,5 @@ __pycache__/
 .venv/
 tests/
 .env
-storage/
+model_registry/
+data

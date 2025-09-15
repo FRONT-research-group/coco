@@ -1,7 +1,10 @@
+import nltk
 import torch
 import torch.nn as nn
 
 from transformers import BertModel
+
+nltk.download('wordnet')
 
 class BERTForQuantification(nn.Module):
     """
